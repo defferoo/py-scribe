@@ -103,3 +103,27 @@ cdef class EventsFromBuffer:
         if self.do_info:
             return self._next_info()
         return self._next_raw()
+
+    def __len__(self):
+        return len(self.buffer)
+
+    def __getitem__(self,key):
+        if key >= len(self.buffer):
+            raise IndexError 
+        type = self.buffer[key]
+        cls, size, is_sized_event = Event_get_type_info(type)
+
+        if is_sized_event:
+            event_sized = self.buffer[key:
+                                      sizeof(scribe_api.scribe_event_sized)+key]
+            extra_size = (<scribe_api.scribe_event_sized *>
+                                    cpython.PyBytes_AsString(event_sized)).size
+        else:
+            extra_size = 0
+
+        event = cls(self.buffer[key:key+size+extra_size],
+                    extra_size)
+         
+        return event
+
+
