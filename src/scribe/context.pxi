@@ -105,15 +105,17 @@ class DivergeError(Exception):
         events = dict()
         it = EventsFromBuffer(logfile_map, remove_annotations=False)
         try:
-            # This section is slow!!
-            for i in self.backtrace_offsets:
-                print it[i]
+            sorted_offsets = list(self.backtrace_offsets)
+            sorted_offsets.sort()
+            bt_index = 0
+            bt_length = len(self.backtrace_offsets)
             for info, event in it:
-                if info.offset in self.backtrace_offsets:
-                    events[info.offset] = (info, event)
-                if len(events)>=len(self.backtrace_offsets):
+                while info.offset > sorted_offsets[bt_index]:
+                    bt_index=bt_index+1
+                if info.offset == sorted_offsets[bt_index]:
+                        events[info.offset] = (info, event)
+                if len(events) >= bt_length:
                     break
-            # End slow section.
         except:
             strs.append("The log file is invalid...")
 
